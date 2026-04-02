@@ -63,6 +63,9 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
+          # 先拉取远程最新更改
+          git pull origin ${GITHUB_REF#refs/heads/} --rebase || true
+          
           # 确保添加所有 CSV 文件
           git add "*.csv" 2>/dev/null || true
           
@@ -75,5 +78,6 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Update scan results: $(date +'%Y-%m-%d %H:%M:%S')"
-            git push origin HEAD:${GITHUB_REF}
+            # 使用强制推送，确保覆盖远程文件
+            git push origin HEAD:${GITHUB_REF} --force
           fi
