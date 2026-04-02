@@ -759,24 +759,32 @@ async def main():
     if ipv4_results:
         print(f"\nIPv4 扫描完成，共找到 {len(ipv4_results)} 个可用IP")
         
-        # 打印前几个 IP 的 IATA 码
-        print("前5个IP的IATA码:")
-        for i, r in enumerate(ipv4_results[:5]):
-            print(f"  {r['ip']}: {r.get('iata_code', 'None')}")
+        # 统计各地区的 IP 数量
+        iata_counts = {}
+        for r in ipv4_results:
+            iata = r.get('iata_code', 'Unknown')
+            iata_counts[iata] = iata_counts.get(iata, 0) + 1
+        
+        print("各地区IP数量统计:")
+        for iata, count in sorted(iata_counts.items(), key=lambda x: x[1], reverse=True)[:10]:
+            print(f"  {iata}: {count} 个IP")
         
         # 如果指定了 IATA 码，只保留该地区的
+        ipv4_to_test = ipv4_results
         if iata_code:
             print(f"开始过滤 IATA 码为 {iata_code} 的IP...")
             filtered = [r for r in ipv4_results if r.get('iata_code') == iata_code]
             print(f"过滤前: {len(ipv4_results)} 个IP")
             print(f"过滤后: {len(filtered)} 个IP")
-            ipv4_results = filtered
-            if not ipv4_results:
-                print("过滤后没有可用IP")
+            
+            if filtered:
+                ipv4_to_test = filtered
+            else:
+                print(f"未找到 {iata_code} 地区的IP，将使用所有可用IP进行测速")
         
-        if ipv4_results:
-            print("开始 IPv4 测速...")
-            ipv4_speed_results = run_speed_test(ipv4_results, max_test_count=20, port=port)
+        if ipv4_to_test:
+            print(f"开始 IPv4 测速，将测试 {min(len(ipv4_to_test), 20)} 个IP...")
+            ipv4_speed_results = run_speed_test(ipv4_to_test, max_test_count=20, port=port)
             save_results_to_csv(ipv4_speed_results, "ipv4.csv")
     else:
         print("IPv4 扫描未找到可用IP")
@@ -795,24 +803,32 @@ async def main():
     if ipv6_results:
         print(f"\nIPv6 扫描完成，共找到 {len(ipv6_results)} 个可用IP")
         
-        # 打印前几个 IP 的 IATA 码
-        print("前5个IP的IATA码:")
-        for i, r in enumerate(ipv6_results[:5]):
-            print(f"  {r['ip']}: {r.get('iata_code', 'None')}")
+        # 统计各地区的 IP 数量
+        iata_counts = {}
+        for r in ipv6_results:
+            iata = r.get('iata_code', 'Unknown')
+            iata_counts[iata] = iata_counts.get(iata, 0) + 1
+        
+        print("各地区IP数量统计:")
+        for iata, count in sorted(iata_counts.items(), key=lambda x: x[1], reverse=True)[:10]:
+            print(f"  {iata}: {count} 个IP")
         
         # 如果指定了 IATA 码，只保留该地区的
+        ipv6_to_test = ipv6_results
         if iata_code:
             print(f"开始过滤 IATA 码为 {iata_code} 的IP...")
             filtered = [r for r in ipv6_results if r.get('iata_code') == iata_code]
             print(f"过滤前: {len(ipv6_results)} 个IP")
             print(f"过滤后: {len(filtered)} 个IP")
-            ipv6_results = filtered
-            if not ipv6_results:
-                print("过滤后没有可用IP")
+            
+            if filtered:
+                ipv6_to_test = filtered
+            else:
+                print(f"未找到 {iata_code} 地区的IP，将使用所有可用IP进行测速")
         
-        if ipv6_results:
-            print("开始 IPv6 测速...")
-            ipv6_speed_results = run_speed_test(ipv6_results, max_test_count=20, port=port)
+        if ipv6_to_test:
+            print(f"开始 IPv6 测速，将测试 {min(len(ipv6_to_test), 20)} 个IP...")
+            ipv6_speed_results = run_speed_test(ipv6_to_test, max_test_count=20, port=port)
             save_results_to_csv(ipv6_speed_results, "ipv6.csv")
     else:
         print("IPv6 扫描未找到可用IP")
