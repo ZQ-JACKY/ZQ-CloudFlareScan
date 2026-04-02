@@ -2,6 +2,10 @@ name: Cloudflare Scan
 
 on:
   workflow_dispatch:
+    inputs:
+      iata_code:
+        description: 'IATA码（可选），例如：LAX'
+        required: false
   schedule:
     - cron: '0 0 * * *'
 
@@ -15,6 +19,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
         
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -27,6 +34,8 @@ jobs:
           pip install aiohttp requests
           
       - name: Run IPv4 and IPv6 scan
+        env:
+          IATA_CODE: ${{ inputs.iata_code }}
         run: |
           python scan_cli.py
           
