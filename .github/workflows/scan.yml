@@ -46,9 +46,13 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          git add ipv4.csv ipv6.csv 2>/dev/null || true
+          # 确保添加所有 CSV 文件
+          git add "*.csv" 2>/dev/null || true
           
           git status
+          
+          # 检查是否有文件被添加
+          git diff --cached --name-only
           
           if git diff --staged --quiet; then
             echo "No changes to commit"
