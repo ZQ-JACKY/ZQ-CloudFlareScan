@@ -33,10 +33,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install aiohttp requests
           
-      - name: Run IPv4 and IPv6 scan
+      - name: Run scan
         env:
           IATA_CODE: ${{ inputs.iata_code || vars.IATA_CODE || '' }}
         run: |
+          echo "IATA_CODE environment variable: '${{ env.IATA_CODE }}'"
           python scan_cli.py
           
       - name: Commit and push results
