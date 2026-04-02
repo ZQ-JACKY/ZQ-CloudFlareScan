@@ -498,7 +498,7 @@ def get_iata_translation(iata_code: str) -> str:
     for continent, countries in AIRPORT_CODES.items():
         for country, cities in countries.items():
             if iata_code in cities:
-                return f"{country}{cities[iata_code]}"
+                return cities[iata_code]
     
     return iata_code
 
@@ -943,7 +943,7 @@ class SpeedTestWorker(QThread):
                 for continent, countries in AIRPORT_CODES.items():
                     for country, cities in countries.items():
                         if self.region_code in cities:
-                            region_name = f"{country}{cities[self.region_code]}"
+                            region_name = cities[self.region_code]
                             break
                     if region_name != "未知地区":
                         break
@@ -989,7 +989,7 @@ class SpeedTestWorker(QThread):
                     for continent, countries in AIRPORT_CODES.items():
                         for country, cities in countries.items():
                             if colo_code in cities:
-                                chinese_name = f"{country}{cities[colo_code]}"
+                                chinese_name = cities[colo_code]
                                 break
                         if chinese_name != "未知地区":
                             break
@@ -1420,7 +1420,7 @@ class CloudflareScanUI(QWidget):
         row3.addStretch()
         
         region_container = QWidget()
-        region_container.setFixedSize(180, BTN_H)
+        region_container.setFixedSize(400, BTN_H)
         region_layout = QHBoxLayout(region_container)
         region_layout.setContentsMargins(0, 0, 0, 0)
         region_layout.setSpacing(5)
@@ -1872,17 +1872,20 @@ class CloudflareScanUI(QWidget):
             return
         
         # 跳过分类项
-        if selected_name.startswith("---") or selected_name.strip().endswith("："):
+        if selected_name.startswith("---") or not selected_name.strip() or "  " in selected_name[:4]:
             self.status_display.append("错误：请选择一个具体的地区，而不是分类！")
             return
         
-        # 通过地区名称反向查找地区码
+        # 处理多列城市的情况，提取实际的城市名称
+        # 去除前导空格，然后按空格分割，取第一个非空项
+        city_name = selected_name.strip().split()[0]
+        
+        # 通过城市名称反向查找地区码
         region_code = None
         for continent, countries in AIRPORT_CODES.items():
             for country, cities in countries.items():
                 for code, city in cities.items():
-                    full_name = f"{country}{city}"
-                    if full_name == selected_name:
+                    if city == city_name:
                         region_code = code
                         break
                 if region_code:
@@ -2062,12 +2065,12 @@ class CloudflareScanUI(QWidget):
                     for continent, countries in AIRPORT_CODES.items():
                         for country, cities in countries.items():
                             if iata_code in cities:
-                                region_name = f"{country}{cities[iata_code]}"
+                                city_name = cities[iata_code]
                                 if continent not in region_categories:
                                     region_categories[continent] = {}
                                 if country not in region_categories[continent]:
                                     region_categories[continent][country] = set()
-                                region_categories[continent][country].add(region_name)
+                                region_categories[continent][country].add(city_name)
                                 break
                 
                 # 清空现有选项，保留空选项
@@ -2083,9 +2086,13 @@ class CloudflareScanUI(QWidget):
                     for country in sorted(countries.keys()):
                         # 添加国家分隔符
                         self.combo_region.addItem(f"  {country}")
-                        regions = countries[country]
-                        for region in sorted(regions):
-                            self.combo_region.addItem(f"    {region}")
+                        # 收集并排序城市
+                        cities = sorted(countries[country])
+                        # 将城市按每行3个分组
+                        for i in range(0, len(cities), 3):
+                            # 组合成一行，用制表符分隔
+                            city_group = "    " + "    ".join(cities[i:i+3])
+                            self.combo_region.addItem(city_group)
                 
                 # 始终设置为第一个空选项，避免默认显示第一个地区
                 self.combo_region.setCurrentIndex(0)
