@@ -35,7 +35,7 @@ jobs:
           
       - name: Run IPv4 and IPv6 scan
         env:
-          IATA_CODE: ${{ inputs.iata_code }}
+          IATA_CODE: ${{ inputs.iata_code || vars.IATA_CODE || '' }}
         run: |
           python scan_cli.py
           
